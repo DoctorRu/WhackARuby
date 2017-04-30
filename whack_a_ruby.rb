@@ -3,9 +3,9 @@ require 'gosu'
 class WhackARuby < Gosu::Window
 
     def initialize
-        @game_width_x = 800
-        @game_width_y = 600
-        super(@game_width_x, @game_width_y)
+        @window_x = 800
+        @window_y = 600
+        super(@window_x, @window_y)
         self.caption = "Whack the Ruby!"
         @image = Gosu::Image.new('ruby.png')
         @x = 200
@@ -18,10 +18,11 @@ class WhackARuby < Gosu::Window
         @hammer_image = Gosu::Image.new('hammer.png')
         @hit = 0
 
-        @time_limit = 5
+        @time_limit = 15
         @font = Gosu::Font.new(30)
         @score = 0
         @playing = true
+        @start_time = 0
     end
 
     def button_down(id)
@@ -35,23 +36,30 @@ class WhackARuby < Gosu::Window
                     @score -= 1
                 end
             end
+        else
+            if id == Gosu::KB_SPACE
+                @playing = true
+                @visible = -10
+                @start_time = Gosu.milliseconds
+                @score = 0
+            end
+
         end
-
     end
-
 
     def update
         if @playing
             @x += @velocity_x
             @y += @velocity_y
-            @velocity_x *= -1 if @x + @width / 2 > @game_width_x || @x - @width / 2 < 0
-            @velocity_y *= -1 if @y + @height / 2 > @game_width_y || @y - @height / 2 < 0
+
+            @velocity_x *= -1 if @x + @width / 2 > @window_x || @x - @width / 2 < 0
+            @velocity_y *= -1 if @y + @height / 2 > @window_y || @y - @height / 2 < 0
 
             @visible -= 1
             @visible = 30 if @visible < -10 && rand < 0.01
 
-            @time_left = (@time_limit - (Gosu.milliseconds / 1000))
-            @playing = false if @time_left == 0
+            @time_left = (@time_limit - ((Gosu.milliseconds - @start_time) / 1000))
+            @playing = false if @time_left < 1
         end
     end
 
@@ -77,6 +85,7 @@ class WhackARuby < Gosu::Window
 
         unless @playing
             @font.draw('Game Over', 300, 300, 3)
+            @font.draw('Press space to play again', 175, 350, 3)
             @visible = 20
         end
     end
